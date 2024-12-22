@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.use("/user", userRoute);
+app.use("/api/users", userRoute);
 app.use("/api/blogs", blogRoute);
 
 app.listen(PORT, () => {

@@ -52,7 +52,7 @@ router.post("/upload",upload.single("blogimage"),async(req,res)=>{
             author :req.body.author
         });
         await newBlog.save();
-        fs.unlinkSync(req.file.path);
+        //fs.unlinkSync(req.file.path);
         res.status(201).json({
             message:"Blog Post uploaded successfully",
             blogid : newBlog._id,

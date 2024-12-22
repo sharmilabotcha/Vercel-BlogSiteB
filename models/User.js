@@ -15,12 +15,14 @@ const userSchema = new Schema({
         required: true,
     }, 
     image :{
-        type : String,
-        required : true
+        data : Buffer,
+        ContentType : String,
+        path : String,
+        filename : String
     }  
 },  
 {
     timestamps: true,
 });
 
-module.exports = mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);
