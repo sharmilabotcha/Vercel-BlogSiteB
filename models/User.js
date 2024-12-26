@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-    name: {
+    username: {
         type: String,
         required: true,
     },
@@ -14,7 +14,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
     }, 
-    image :{
+    profileImage :{
         data : Buffer,
         ContentType : String,
         path : String,

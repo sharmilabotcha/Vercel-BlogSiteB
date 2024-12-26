@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRoute from "./routes/UserRoute.js";
 import blogRoute from "./routes/BlogRoutes.js";
+import cors from "cors";
 
  const app = express();
  dotenv.config();
@@ -16,7 +17,7 @@ import blogRoute from "./routes/BlogRoutes.js";
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-
+app.use(cors());
 app.use("/api/users", userRoute);
 app.use("/api/blogs", blogRoute);
 
