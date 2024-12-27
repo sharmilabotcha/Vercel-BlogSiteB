@@ -15,8 +15,8 @@ const blogschema = new Schema({
         required : true,
     },
     blogimage:{
-        Data: Buffer,
-        ContentTyoe: String,
+        data: Buffer,
+        ContentType: String,
         path : String,
         filename : String
     },

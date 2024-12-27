@@ -85,9 +85,9 @@ router.get("/",authMiddleware, async (req,res)=>{
         //transform blogs to include image as base64
         const transformedBlogs = blogs.map(blog=>({
             ...blog.toObject(),
-            blogimage: blog.blogimage && blog.blogimage.Data
+            blogimage: blog.blogimage && blog.blogimage.data
                 ? {
-                    data:`data:${blog.blogimage.ContentType};base64,${blog.blogimage.Data.toString('base64')}`,
+                    data:`data:${blog.blogimage.ContentType};base64,${blog.blogimage.data.toString('base64')}`,
                     contentType: blog.blogimage.ContentType,
                     filename: blog.blogimage.filename
                 }
@@ -111,9 +111,9 @@ router.get("/my-blogs",authMiddleware, async (req,res)=>{
         //transform blogs to include image as base64
         const transformedBlogs = userBlogs.map(blog=>({
             ...blog.toObject(),
-            blogimage: blog.blogimage && blog.blogimage.Data
+            blogimage: blog.blogimage && blog.blogimage.data
                 ? {
-                    data:`data:${blog.blogimage.ContentType};base64,${blog.blogimage.Data.toString('base64')}`,
+                    data:`data:${blog.blogimage.ContentType};base64,${blog.blogimage.data.toString('base64')}`,
                     contentType: blog.blogimage.ContentType,
                     filename: blog.blogimage.filename
                 }
@@ -165,16 +165,12 @@ router.delete("/:id", authMiddleware, async (req,res)=>{
 })
 
 //get all blogs
-
-
-
-//get all blogs
 router.get("/allblogs", async (req, res) => {
     try {
         const blogs = await Blog.find()
             .populate({
                 path: 'user',
-                select: 'username profileImage',
+                select: 'username profileImage ',
                 options: { 
                     strictPopulate: false 
                 }
@@ -199,7 +195,8 @@ router.get("/allblogs", async (req, res) => {
         // Transform blogs with comprehensive null checking
         const transformedBlogs = blogs.map(blog => {
             // Safely handle user and image data
-            const userProfileImage = blog.user?.profileImage || {};
+            const user = blog.user || {};
+            const userProfileImage = user.profileImage || {};
             const blogImage = blog.blogimage || {};
 
             return {
@@ -207,7 +204,7 @@ router.get("/allblogs", async (req, res) => {
                 title: blog.title || 'Untitled',
                 category: blog.category || 'Uncategorized',
                 description: blog.description || 'No description',
-                author: blog.author || (blog.user?.username || 'Anonymous'),
+                author: blog.author || (user.username || 'Anonymous'),
                 avatar: safeBase64(userProfileImage.ContentType, userProfileImage.data),
                 image: safeBase64(blogImage.ContentType, blogImage.data),
                 date: blog.createdAt || new Date(),
@@ -231,5 +228,7 @@ router.get("/allblogs", async (req, res) => {
         });
     }
 });
+
+
 
 export default router;
