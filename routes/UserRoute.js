@@ -48,7 +48,7 @@ router.post("/upload",upload.single("profileImage"),async(req,res)=>{
             )
 
         }
-
+        
         //check whether name or email already exists
         const nameexists = await User.findOne({username:req.body.username});
         if(nameexists){
@@ -147,7 +147,7 @@ router.get("/profile",authMiddleware, async (req,res)=>{
         const profileResponse = {
             name:user.username,
             email:user.email,
-            avatar: user.profileImage ? 
+            avatar: user.profileImage && user.profileImage.data? 
             `data:${user.profileImage.ContentType};base64,${user.profileImage.data.toString('base64')}`
             : null,
             blogs:blogs.map(blog =>({
