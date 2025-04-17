@@ -17,7 +17,16 @@ import cors from "cors";
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: [
+    '[https://blog-tau-seven-72.vercel.app](https://blog-tau-seven-72.vercel.app)',
+    '[https://blog-b-ruddy.vercel.app](https://blog-b-ruddy.vercel.app)',
+    'http://localhost:3000'  // Keep for local development
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use("/api/users", userRoute);
 app.use("/api/blogs", blogRoute);
 
