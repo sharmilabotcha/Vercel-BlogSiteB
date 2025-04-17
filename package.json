@@ -27,6 +27,7 @@
   "type": "module",
         "scripts": {
           "start": "node index.js",
-          "build": "echo 'No build step needed'"
+          "build": "echo 'No build step needed'",
+          "dev": "nodemon index.js"
         }
 }
