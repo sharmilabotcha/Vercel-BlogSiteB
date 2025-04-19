@@ -1,93 +1,71 @@
 import express from "express";
 import multer from "multer";
 import Blog from "../models/Blog.js";
-import fs from "fs";
-import path from "path";
 import jwt from "jsonwebtoken";
 import authMiddleware from "../middleware/authMiddleware.js";
 const router = express.Router();
 
-const storage = multer.diskStorage({
-    destination: (req,file,cb) =>{
-        const uploadsDir = path.join(process.cwd(), "uploads");
-        if(!fs.existsSync(uploadsDir)){
-            fs.mkdirSync(uploadsDir);
-        }
-        cb(null,uploadsDir);
-    },
-    filename:(req,file,cb)=>{
-        cb(null,Date.now()+file.originalname);
-    }
-
-})
+// Use memory storage for Multer (no disk writes)
+const storage = multer.memoryStorage();
 
 const upload = multer({
-    storage:storage,
-    limits:{filesize:5*1024*1024},
-    fileFilter:(req,file,cb)=>{
-        const allowedtypes = ["image/jpeg","image/jpg","image/png"];
-        if(allowedtypes.includes(file.mimetype)){
-            cb(null,true);
-        }else{
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowedtypes = ["image/jpeg", "image/jpg", "image/png"];
+        if (allowedtypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
             cb(new Error("invalid file type"));
         }
     }
-})
+});
 
-router.post("/upload",authMiddleware,upload.single("blogimage"),async(req,res)=>{
-    try{
-
-        console.log('recieved body', req.body);
-        console.log('recieved file', req.file);
-        if(!req.file){
-            return res.status(200).json(
-                {
-                    message:"No file uploaded"
-                }
-            )
-
+// Upload a new blog post with image stored in MongoDB
+router.post("/upload", authMiddleware, upload.single("blogimage"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                message: "No file uploaded"
+            });
         }
-        const fileData = fs.readFileSync(req.file.path);
+
         const newBlog = new Blog({
-            title : req.body.title,
-            category : req.body.category,
-            description : req.body.description,
-            blogimage:{
-                data : fileData,
-                ContentType : req.file.mimetype,
-                path : req.file.path,
-                filename:req.file.filename
+            title: req.body.title,
+            category: req.body.category,
+            description: req.body.description,
+            blogimage: {
+                data: req.file.buffer,
+                ContentType: req.file.mimetype,
+                filename: req.file.originalname
             },
-            author :req.body.author,
+            author: req.body.author,
             user: req.user.id
         });
         await newBlog.save();
-        //fs.unlinkSync(req.file.path);
         res.status(201).json({
-            message:"Blog Post uploaded successfully",
-            blogid : newBlog._id,
-            imagepath : req.file.path,
-            filename : req.file.filename
+            message: "Blog Post uploaded successfully",
+            blogid: newBlog._id
         });
     }
-    catch(err){
+    catch (err) {
         res.status(500).json({
-            message:"Error creating blog post",
+            message: "Error creating blog post",
             error: err.message
         });
     }
 });
 
-router.get("/",authMiddleware, async (req,res)=>{
-    try{
+router.get("/", authMiddleware, async (req, res) => {
+    try {
         const blogs = await Blog.find();
 
         //transform blogs to include image as base64
-        const transformedBlogs = blogs.map(blog=>({
+        const transformedBlogs = blogs.map(blog => ({
             ...blog.toObject(),
             blogimage: blog.blogimage && blog.blogimage.data
                 ? {
-                    data:`data:${blog.blogimage.ContentType};base64,${blog.blogimage.data.toString('base64')}`,
+                    data: `data:${blog.blogimage.ContentType};base64,${blog.blogimage.data.toString('base64')}`,
                     contentType: blog.blogimage.ContentType,
                     filename: blog.blogimage.filename
                 }
@@ -96,24 +74,24 @@ router.get("/",authMiddleware, async (req,res)=>{
 
         res.status(200).json(transformedBlogs);
 
-    }catch(err){
+    } catch (err) {
         res.status(500).json({
-            message:"Error fetching blog posts",
+            message: "Error fetching blog posts",
             error: err.message
         });
     }
 });
 
-router.get("/my-blogs",authMiddleware, async (req,res)=>{
-    try{
-        const userBlogs = await Blog.find({user:req.user.id});
-        
+router.get("/my-blogs", authMiddleware, async (req, res) => {
+    try {
+        const userBlogs = await Blog.find({ user: req.user.id });
+
         //transform blogs to include image as base64
-        const transformedBlogs = userBlogs.map(blog=>({
+        const transformedBlogs = userBlogs.map(blog => ({
             ...blog.toObject(),
             blogimage: blog.blogimage && blog.blogimage.data
                 ? {
-                    data:`data:${blog.blogimage.ContentType};base64,${blog.blogimage.data.toString('base64')}`,
+                    data: `data:${blog.blogimage.ContentType};base64,${blog.blogimage.data.toString('base64')}`,
                     contentType: blog.blogimage.ContentType,
                     filename: blog.blogimage.filename
                 }
@@ -122,47 +100,38 @@ router.get("/my-blogs",authMiddleware, async (req,res)=>{
 
         res.status(200).json(transformedBlogs);
 
-    }catch(err){
+    } catch (err) {
         res.status(500).json({
-            message:"Error fetching blog posts",
+            message: "Error fetching blog posts",
             error: err.message
         });
     }
-})
+});
 
-router.delete("/:id", authMiddleware, async (req,res)=>{
-    try{
+router.delete("/:id", authMiddleware, async (req, res) => {
+    try {
         const blog = await Blog.findOneAndDelete({
             _id: req.params.id,
             user: req.user.id
         });
 
-        if(!blog){
-            return res.sendStatus(404).json({
-                message:"Blog not found "
+        if (!blog) {
+            return res.status(404).json({
+                message: "Blog not found "
             });
         }
 
-        if(blog.blogimage.path && blog.blogimage){
-            try{
-                fs.unlinkSync(blog.blogimage.path);
-            }
-            catch(err){
-                console.log(err);
-            }
-        }
-
         res.status(200).json({
-            message:"Blog deleted successfully"
+            message: "Blog deleted successfully"
         });
     }
-    catch(err){
+    catch (err) {
         res.status(500).json({
-            message:"Error deleting blog",
+            message: "Error deleting blog",
             error: err.message
         });
     }
-})
+});
 
 //get all blogs
 router.get("/allblogs", async (req, res) => {
@@ -171,8 +140,8 @@ router.get("/allblogs", async (req, res) => {
             .populate({
                 path: 'user',
                 select: 'username profileImage ',
-                options: { 
-                    strictPopulate: false 
+                options: {
+                    strictPopulate: false
                 }
             })
             .sort({ createdAt: -1 });
@@ -228,7 +197,5 @@ router.get("/allblogs", async (req, res) => {
         });
     }
 });
-
-
 
 export default router;
