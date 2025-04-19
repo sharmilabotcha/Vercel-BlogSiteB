@@ -19,11 +19,11 @@ app.get("/", (req, res) => {
 });
 // app.use(cors());
 app.use(cors({
-  origin: [
-    '[https://blog-tau-seven-72.vercel.app](https://blog-tau-seven-72.vercel.app)',
-    '[https://blog-b-ruddy.vercel.app](https://blog-b-ruddy.vercel.app)',
-    'http://localhost:3000'  // Keep for local development
-  ],
+  // origin: [
+  //   '[https://blog-tau-seven-72.vercel.app](https://blog-tau-seven-72.vercel.app)',
+  //   '[https://blog-o9qsj4fyl-vardhanvadapalli06-gmailcoms-projects.vercel.app](https://blog-o9qsj4fyl-vardhanvadapalli06-gmailcoms-projects.vercel.app)',
+  //   'http://localhost:3000'
+  // ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
